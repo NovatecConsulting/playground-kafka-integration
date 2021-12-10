@@ -7,6 +7,12 @@ This is a simple HTTP server for mocking.
 1. Start compile in watch mode: `Ctrl+Shift+B` and select `tsc: watch - tsconfig.json`
 2. Launch in debug mode: `F5`
 
+.Run example script to add records the server
+[source,bash]
+----
+./example.sh
+----
+
 == Quick Start CLI
 
 === Build
@@ -28,7 +34,6 @@ npm run compile
 ----
 npm run compile-watch
 ----
-
 
 === Start
 
