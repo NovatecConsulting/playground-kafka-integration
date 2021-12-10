@@ -1,0 +1,44 @@
+#############################################################
+# Integration Platform                                      #
+#############################################################
+---
+version: '2.4'
+services:
+
+  #############################################################
+  # Kafka                                                     #
+  #############################################################
+  # https://github.com/ueisele/kafka-images/tree/main/server-standalone
+  kafka:
+    image: ueisele/apache-kafka-server-standalone:${KAFKA_VERSION}
+    restart: always
+    ports:
+      - 19092:9092
+    volumes:
+      - kafka:/opt/apache/kafka/data
+
+  #############################################################
+  # Confluent Schema Registry (CP)                            #
+  #############################################################
+  # https://docs.confluent.io/current/installation/docker/config-reference.html#schema-registry-configuration
+  schema-registry:
+    image: confluentinc/cp-schema-registry:${CONFLUENT_VERSION}
+    restart: always
+    depends_on:
+      - kafka
+    ports:
+      - 18081:8081
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: localhost # (required) The advertised host name. Not reuqired in single host mode, but required by the image. 
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081 # (default: http://0.0.0.0:8081) Comma-separated list of listeners that listen for API requests
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092 # (required) A list of Kafka brokers to connect. If kafkastore.connection.url is not specified, the Kafka cluster containing these bootstrap servers is used both to coordinate Schema Registry instances (primary election) and to store schema data.
+      SCHEMA_REGISTRY_CUB_KAFKA_TIMEOUT: 60 # (default: 40) Docker image setting, which specifies the amount of time to wait for Kafka. Could be used, to get rid of Docker healthchecks. 
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC_REPLICATION_FACTOR: 1 # (default: 3) The desired replication factor of the schema topic. Must be 1, because we only have a single broker.
+      SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL: FULL_TRANSITIVE # (default: backward) The Avro compatibility type.
+
+volumes:
+    kafka:
+
+networks:
+    default:
+        name: ${DOMAIN_NAME}
