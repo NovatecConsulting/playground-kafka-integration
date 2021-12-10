@@ -1,10 +1,10 @@
 = Kafka Integration Playground
 
-Playground environment to play with and evaluate integration appraches with Kafka.
+Playground environment to evaluate integration appraches with Kafka.
 
-This repository contains the integrations:
+This repository contains the following integration playgrounds:
 
-* link:integrations/source-http-custorm[source-http-custorm]: Kafka Connect - Castorm HTTP Source Connector with Avro
+* link:integrations/source-http-castorm[source-http-castorm]: Kafka Connect - Castorm HTTP Source Connector with Avro
 
 == Quick Start
 
@@ -14,7 +14,7 @@ This repository contains the integrations:
 ./dc-env.sh platform up -d
 ----
 
-Run and play around with any of the integrations, e.g. link:integrations/source-http-custorm[source-http-custorm].
+Run and play around with any of the integrations, e.g. link:integrations/source-http-castorm[source-http-castorm].
 
 .Finally, shut down the platform
 [source,bash]
