@@ -66,5 +66,5 @@ docker run --rm -it -p 8080:3000 integration-app-httpserver:latest
 .Insert examples
 [source,bash]
 ----
-PORT=8080 ./example.sh
+TARGET_HOST=localhost TARGET_PORT=8080 ./example.sh
 ----

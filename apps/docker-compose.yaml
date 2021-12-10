@@ -1,0 +1,21 @@
+#############################################################
+# Applications to Integrate                                 #
+#############################################################
+---
+version: '2.4'
+services:
+
+  #############################################################
+  # Source HTTP Server                                        #
+  #############################################################
+  source-httpserver:
+    image: integration-app-httpserver:latest
+    build:
+      context: httpserver/
+    restart: always
+    ports:
+      - 13000:3000
+
+networks:
+    default:
+        name: ${DOMAIN_NAME}
