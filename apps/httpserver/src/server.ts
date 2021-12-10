@@ -1,4 +1,13 @@
 import express from 'express';
+import process from 'process';
+
+//Handle Termination
+process.on('SIGINT', handleTermination)
+process.on('SIGTERM', handleTermination)
+function handleTermination(event: NodeJS.Signals) {
+	console.info(`Received ${event}`)
+	process.exit(0)
+}
 
 // Constants
 const PORT = 3000;

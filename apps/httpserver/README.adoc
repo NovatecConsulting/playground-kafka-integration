@@ -48,3 +48,23 @@ npm run start
 ----
 npm run start-watch
 ----
+
+== Quick Start Docker
+
+.Build Docker image
+[source,bash]
+----
+./build-docker.sh
+----
+
+.Run Docker image
+[source,bash]
+----
+docker run --rm -it -p 8080:3000 integration-app-httpserver:latest
+----
+
+.Insert examples
+[source,bash]
+----
+PORT=8080 ./example.sh
+----
