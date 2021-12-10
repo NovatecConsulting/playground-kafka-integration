@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+BASE_DIR="$(readlink -f $(dirname ${BASH_SOURCE[0]}))"
 
 REGISTRY=${REGISTRY:-}
 IMAGE=${IMAGE:-integration-app-httpserver}
@@ -12,4 +13,4 @@ function fullImageName () {
     fi
 }
 
-docker build -t $(fullImageName) .
+docker build -t $(fullImageName) "${BASE_DIR}"
