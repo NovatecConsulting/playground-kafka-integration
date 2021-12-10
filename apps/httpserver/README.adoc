@@ -1,0 +1,45 @@
+= Mock HTTP Server
+
+This is a simple HTTP server for mocking.
+
+== Quick Start VS Code
+
+1. Start compile in watch mode: `Ctrl+Shift+B` and select `tsc: watch - tsconfig.json`
+2. Launch in debug mode: `F5`
+
+== Quick Start CLI
+
+=== Build
+
+.Install npm packages
+[source,bash]
+----
+npm install
+----
+
+.Compile typescript
+[source,bash]
+----
+npm run compile
+----
+
+.Compile typescript in watch mode
+[source,bash]
+----
+npm run compile-watch
+----
+
+
+=== Start
+
+.Run node
+[source,bash]
+----
+npm run start
+----
+
+.Run node in watch mode
+[source,bash]
+----
+npm run start-watch
+----
