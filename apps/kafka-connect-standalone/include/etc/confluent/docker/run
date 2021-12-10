@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# adopted from original confluent docker build [1]
+# and adjusted to run connect standalone instead.
+#
+# [1] https://raw.githubusercontent.com/confluentinc/kafka-images/6.1.x/kafka-connect-base/include/etc/confluent/docker/run
+#
+
+. /etc/confluent/docker/bash-config
+
+. /etc/confluent/docker/mesos-setup.sh
+. /etc/confluent/docker/apply-mesos-overrides
+
+echo "===> User"
+id
+
+echo "===> Configuring ..."
+/etc/confluent/docker/configure
+
+echo "===> Installing ..."
+/etc/confluent/docker/install
+
+echo "===> Running preflight checks ... "
+/etc/confluent/docker/ensure
+
+echo "===> Launching ... "
+exec /etc/confluent/docker/launch

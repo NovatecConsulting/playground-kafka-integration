@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+if [ -z "${CONNECT_REST_PORT:-}" ]; then
+  export CONNECT_REST_PORT=8083
+fi
+
+if [ -z "${CONNECT_REST_ADVERTISED_HOST_NAME:-}" ]; then
+  export CONNECT_REST_ADVERTISED_HOST_NAME="$(hostname -i | cut -d" " -f1)"
+fi
+
+if [ -z "${CONNECT_OFFSET_STORAGE_FILE_FILENAME:-}" ]; then
+  export CONNECT_OFFSET_STORAGE_FILE_FILENAME=/var/lib/kafka-connect/connect.offsets
+else
+  export CONNECT_OFFSET_STORAGE_FILE_FILENAME=/var/lib/kafka-connect/${CONNECT_OFFSET_STORAGE_FILE_FILENAME}
+fi
+
+# Fix for https://issues.apache.org/jira/browse/KAFKA-3988
+if [[ ${CONNECT_INTERNAL_KEY_CONVERTER-} == "org.apache.kafka.connect.json.JsonConverter" ]] || [[ ${CONNECT_INTERNAL_VALUE_CONVERTER-} == "org.apache.kafka.connect.json.JsonConverter" ]]
+then
+  export CONNECT_INTERNAL_KEY_CONVERTER_SCHEMAS_ENABLE=false
+  export CONNECT_INTERNAL_VALUE_CONVERTER_SCHEMAS_ENABLE=false
+fi

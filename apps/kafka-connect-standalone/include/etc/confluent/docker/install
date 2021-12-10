@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+#. /etc/confluent/docker/bash-config
+
+# ensure required connectors and extensions are installed
+
+export PLUGINS_DIR="${PLUGINS_DIR:-"/usr/share/confluent-hub-components/"}"
+
+if [ ! -z "${PLUGIN_INSTALL_CONFLUENT_HUB_CONNECTOR_IDS:-}" ]; then
+  for connector in $(sed "s/,/ /g" <<< ${PLUGIN_INSTALL_CONFLUENT_HUB_CONNECTOR_IDS}); do 
+    confluent-hub install --no-prompt ${connector}; 
+  done
+fi
+
+if [ ! -z "${PLUGIN_INSTALL_EXTENSION_URLS:-}" ]; then
+  for url in $(sed "s/,/ /g" <<< ${PLUGIN_INSTALL_EXTENSION_URLS}); do 
+    filename="$(basename "${url}")"
+    name="$(sed 's/\(-v\?[0-9]\+\)\?\..*$//' <<< "${filename}")"
+    [[ -d "${PLUGINS_DIR}/${name}" ]] && rm -r "${PLUGINS_DIR}/${name}"
+    mkdir -p "${PLUGINS_DIR}/${name}"
+    if [[ ${filename} == *.zip ]]; then
+      (
+        cd "${PLUGINS_DIR}/${name}"
+        wget "${url}"
+        unzip -o "${filename}"
+        rm "${filename}"
+      )
+    elif [[ ${filename} == *.tar* ]] || [[ ${filename} == *.tgz ]]; then
+      curl -L "${url}" | tar -zx -C "${PLUGINS_DIR}/${name}/"
+    elif [[ ${filename} == *.jar ]]; then
+      curl -L -o "${PLUGINS_DIR}/${name}/${filename}" "${url}"     
+    else
+      echo "Could not install ${filename} because extension is not supported!"
+    fi
+  done
+fi
+
+if [ ! -z "${PLUGIN_INSTALL_CMDS:-}" ]; then
+  eval ${PLUGIN_INSTALL_CMDS}
+fi

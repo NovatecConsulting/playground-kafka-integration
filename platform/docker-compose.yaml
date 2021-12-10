@@ -16,6 +16,8 @@ services:
       - 19092:9092
     volumes:
       - kafka:/opt/apache/kafka/data
+    environment:
+      KAFKA_NUM_PARTITIONS: 2  
 
   #############################################################
   # Confluent Schema Registry (CP)                            #
@@ -37,8 +39,9 @@ services:
       SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL: FULL_TRANSITIVE # (default: backward) The Avro compatibility type.
 
 volumes:
-    kafka:
+  kafka:
 
 networks:
-    default:
-        name: ${DOMAIN_NAME}
+  default:
+    name: ${DOMAIN_NAME}
+    external: {}

@@ -1,0 +1,41 @@
+= Integration Plaground: Castorm HTTP Source Connector with Avro
+
+Playground to evaluate usage of Castorm HTTP Source Connector (https://github.com/castorm/kafka-connect-http).
+
+== Quick Start
+
+.Ensure that platform is up and running
+[source,bash]
+----
+./dc-env.sh platform up -d
+----
+
+.Start HTTP source connector integration playground
+[source,bash]
+----
+./dc-env.sh integrations/source-http-castorm up -d
+----
+
+.Insert some test data into the HTTP server
+[source,bash]
+----
+integrations/source-http-castorm/insert-httpserver-data.sh
+----
+
+.Add additional test data as you want
+[source,bash]
+----
+curl -i -X POST http://localhost:23000/api/task/3333 --header "Content-Type: application/json"  --data '{"assignees":["anja","stefanie"],"status":{"user":"anja","type":"IN_PROGRESS"}}'
+----
+
+.Watch the log output of the Kafka topic logger
+[source,bash]
+----
+./dc-env.sh integrations/source-http-castorm logs source-http-castorm-logger -f
+----
+
+.If you are done you can shutdown the integration playground
+[source,bash]
+----
+./dc-env.sh integrations/source-http-castorm down -v
+----

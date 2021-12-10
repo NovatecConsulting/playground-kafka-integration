@@ -1,0 +1,100 @@
+#############################################################
+# Integrations                                              #
+#############################################################
+---
+version: '2.4'
+services:
+
+  #############################################################
+  # Source HTTP Server                                        #
+  #############################################################
+  source-http-castorm-httpserver:
+    image: integration-app-httpserver:latest
+    build:
+      context: ../../apps/httpserver/
+    restart: always
+    ports:
+      - 23000:3000
+
+  #############################################################
+  # Logger Source Topic                                       #
+  #############################################################
+  source-http-castorm-logger:
+    image: confluentinc/cp-schema-registry:${CONFLUENT_VERSION}
+    restart: always
+    command: |
+      kafka-avro-console-consumer \
+        --bootstrap-server kafka:9092 \
+        --topic source-http-castorm \
+        --group source-http-castorm-logger \
+        --from-beginning \
+        --property schema.registry.url=http://schema-registry:8081 \
+        --property print.key=true \
+        --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer \
+        --property print.timestamp=true
+
+  #############################################################
+  # Connector HTTP Source                                     #
+  #############################################################
+  # https://github.com/castorm/kafka-connect-http
+  source-http-castorm-connector:
+    image: integration-integrations-kafka-connect-standalone:${CONFLUENT_VERSION}
+    build:
+      context: ../../apps/kafka-connect-standalone
+      args:
+        CONFLUENT_VERSION: ${CONFLUENT_VERSION}
+    restart: always
+    volumes:
+      - source-http-castorm-connector:/var/lib/kafka-connect/
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka:9092 # (required) A host:port pair for establishing the initial connection to the Kafka cluster.
+      CONNECT_CUB_KAFKA_TIMEOUT: 60 # (default: 40) Docker image setting, which specifies the amount of time to wait for Kafka. Could be used, to get rid of Docker healthchecks. 
+      CONNECT_REST_PORT: 8084 # (default: 8083) Port for the REST API to listen on.
+      #CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter # (required) Converter class for keys. This controls the format of the data that will be written to Kafka for source connectors or read from Kafka for sink connectors.
+      #CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      #CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter # (required) Converter class for values. This controls the format of the data that will be written to Kafka for source connectors or read from Kafka for sink connectors.
+      #CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter # (required) Converter class for keys. This controls the format of the data that will be written to Kafka for source connectors or read from Kafka for sink connectors.
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter # (required) Converter class for values. This controls the format of the data that will be written to Kafka for source connectors or read from Kafka for sink connectors.
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "true"
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      #CONNECT_VALUE_CONVERTER_AUTO_REGISTER_SCHEMAS: "false"
+      #CONNECT_VALUE_CONVERTER_USE_LATEST_VERSION: "true"
+      CONNECT_VALUE_CONVERTER_CONNECT_META_DATA: "false"
+      #CONNECT_VALUE_CONVERTER_ENHANCED_AVRO_SCHEMA_SUPPORT: "true"
+      CONNECT_OFFSET_STORAGE_FILE_FILENAME: connect.offsets # The storage file name for connector offsets. This file is stored on the local filesystem in standalone mode. Using the same file name for two workers will cause offset data to be deleted or overwritten with different values.
+      CONNECT_OFFSET_FLUSH_INTERVAL_MS: 10000 # (default: 60000) Interval at which to try committing offsets for tasks. Explicitly reduced for dev environment.
+      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
+      CONNECT_LOG4J_LOGGERS: "org.reflections=ERROR,org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,com.github.castorm.kafka.connect.http.client.okhttp.OkHttpClient=DEBUG"
+      #use fork of expandjsonsmt to support Avro converter
+      PLUGIN_INSTALL_EXTENSION_URLS: |
+        https://github.com/castorm/kafka-connect-http/releases/download/v0.8.11/castorm-kafka-connect-http-0.8.11.zip
+        https://github.com/ueisele/expandjsonsmt/releases/download/0.0.7-structs/kafka-connect-smt-expandjsonsmt-0.0.7-structs-assemble-all.jar
+      CONNECTOR_NAME: http-source
+      CONNECTOR_CONNECTOR_CLASS: com.github.castorm.kafka.connect.http.HttpSourceConnector
+      CONNECTOR_TASKS_MAX: 1
+      CONNECTOR_HTTP_TIMER_INTERVAL_MILLIS: 5000
+      CONNECTOR_HTTP_TIMER_CATCHUP_INTERVAL_MILLIS: 5000
+      CONNECTOR_HTTP_REQUEST_URL: http://source-http-castorm-httpserver:3000/api/task
+      CONNECTOR_HTTP_RESPONSE_LIST_POINTER: /items
+      CONNECTOR_HTTP_RESPONSE_RECORD_OFFSET_POINTER: "key=/id,timestamp=/updatedAt"
+      CONNECTOR_HTTP_OFFSET_INITIAL: "timestamp=2000-01-01T00:00:00Z"
+      CONNECTOR_KAFKA_TOPIC: source-http-castorm
+      CONNECTOR_TRANSFORMS: "expandvalue,extractvalue,schema,extractkey"
+      CONNECTOR_TRANSFORMS_EXPANDVALUE_TYPE: "com.redhat.insights.expandjsonsmt.ExpandJSON$$Value"
+      CONNECTORPROPERTIES_TRANSFORMS: transforms.expandvalue.sourceFields=value
+      CONNECTOR_TRANSFORMS_EXTRACTVALUE_TYPE: "org.apache.kafka.connect.transforms.ExtractField$$Value"
+      CONNECTOR_TRANSFORMS_EXTRACTVALUE_FIELD: "value"
+      CONNECTOR_TRANSFORMS_SCHEMA_TYPE: "org.apache.kafka.connect.transforms.SetSchemaMetadata$$Value"
+      CONNECTOR_TRANSFORMS_SCHEMA_SCHEMA_NAME: "dev.uweeisele.examples.task.v1.Task"
+      CONNECTOR_TRANSFORMS_EXTRACTKEY_TYPE: "org.apache.kafka.connect.transforms.ExtractField$$Key"
+      CONNECTOR_TRANSFORMS_EXTRACTKEY_FIELD: "key"
+
+volumes:
+  source-http-castorm-connector:
+
+networks:
+  default:
+    name: ${DOMAIN_NAME}
+    external: {}
