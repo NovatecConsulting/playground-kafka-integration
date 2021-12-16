@@ -1,4 +1,4 @@
-= Integration Plaground: Castorm HTTP Source Connector with Avro
+= Integration Plaground: Castorm HTTP Source Connector with Json
 
 Playground to evaluate usage of Castorm HTTP Source Connector (https://github.com/castorm/kafka-connect-http).
 
@@ -13,13 +13,13 @@ Playground to evaluate usage of Castorm HTTP Source Connector (https://github.co
 .Start HTTP source connector integration playground
 [source,bash]
 ----
-./dc-env.sh integrations/source-http-castorm up -d
+./dc-env.sh integrations/source-httpcastorm-json up -d
 ----
 
 .Insert some test data into the HTTP server
 [source,bash]
 ----
-integrations/source-http-castorm/insert-httpserver-data.sh
+integrations/source-httpcastorm-json/insert-httpserver-data.sh
 ----
 
 .Add additional test data as you want
@@ -31,11 +31,11 @@ curl -i -X POST http://localhost:23000/api/task/3333 --header "Content-Type: app
 .Watch the log output of the Kafka topic logger
 [source,bash]
 ----
-./dc-env.sh integrations/source-http-castorm logs source-http-castorm-logger -f
+./dc-env.sh integrations/source-httpcastorm-json logs source-httpcastorm-json-logger -f
 ----
 
 .If you are done you can shutdown the integration playground
 [source,bash]
 ----
-./dc-env.sh integrations/source-http-castorm down -v
+./dc-env.sh integrations/source-httpcastorm-json down -v
 ----

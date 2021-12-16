@@ -1,0 +1,88 @@
+#############################################################
+# Integrations                                              #
+#############################################################
+---
+version: '2.4'
+services:
+
+  #############################################################
+  # Connector HTTP Source                                     #
+  #############################################################
+  # https://github.com/castorm/kafka-connect-http
+  # https://github.com/ueisele/kafka-images/tree/main/connect-standalone
+  source-httpcastorm-avro-connector:
+    image: ueisele/apache-kafka-connect-standalone:${KAFKA_VERSION}
+    restart: always
+    volumes:
+      - source-httpcastorm-avro-connector:/var/lib/kafka-connect/
+    environment:
+      ## Worker Configuration
+      CONNECT_BOOTSTRAP_SERVERS: kafka:9092
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "true"
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_VALUE_CONVERTER_CONNECT_META_DATA: "false"
+      CONNECT_OFFSET_FLUSH_INTERVAL_MS: 5000
+      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
+      CONNECT_LOG4J_LOGGERS: "org.reflections=ERROR,org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,com.github.castorm.kafka.connect.http.client.okhttp.OkHttpClient=DEBUG"
+      CONNECT_PLUGIN_INSTALL_EXTENSION_URLS: |
+        https://github.com/castorm/kafka-connect-http/releases/download/v0.8.11/castorm-kafka-connect-http-0.8.11.zip
+        https://github.com/ueisele/expandjsonsmt/releases/download/0.0.7-structs/kafka-connect-smt-expandjsonsmt-0.0.7-structs-assemble-all.jar
+      ## Connector Configuration
+      CONNECTOR_NAME: http-source
+      CONNECTOR_CONNECTOR_CLASS: com.github.castorm.kafka.connect.http.HttpSourceConnector
+      CONNECTOR_TASKS_MAX: 1
+      CONNECTOR_HTTP_REQUEST_URL: http://source-httpcastorm-avro-httpserver:3000/api/task
+      CONNECTOR_HTTP_RESPONSE_LIST_POINTER: /items
+      CONNECTOR_HTTP_RESPONSE_RECORD_OFFSET_POINTER: "key=/id,timestamp=/updatedAt"
+      CONNECTOR_HTTP_OFFSET_INITIAL: "timestamp=2000-01-01T00:00:00Z"
+      CONNECTOR_HTTP_TIMER_INTERVAL_MILLIS: 5000
+      CONNECTOR_HTTP_TIMER_CATCHUP_INTERVAL_MILLIS: 5000
+      CONNECTOR_KAFKA_TOPIC: source-httpcastorm-avro
+      CONNECTOR_TRANSFORMS: "valueexpand,valueextract,valueschema,keyextract"
+      CONNECTORPROPERTIES_TRANSFORMS: |
+        transforms.valueexpand.type=com.redhat.insights.expandjsonsmt.ExpandJSON$$Value
+        transforms.valueexpand.sourceFields=value
+        transforms.valueextract.type=org.apache.kafka.connect.transforms.ExtractField$$Value
+        transforms.valueextract.field=value
+        transforms.valueschema.type=org.apache.kafka.connect.transforms.SetSchemaMetadata$$Value
+        transforms.valueschema.schema.name=dev.uweeisele.examples.task.v1.Task
+        transforms.keyextract.type=org.apache.kafka.connect.transforms.ExtractField$$Key
+        transforms.keyextract.field=key
+
+  #############################################################
+  # Logger Source Topic                                       #
+  #############################################################
+  source-httpcastorm-avro-logger:
+    image: confluentinc/cp-schema-registry:${CONFLUENT_VERSION}
+    restart: always
+    command: |
+      kafka-avro-console-consumer \
+        --bootstrap-server kafka:9092 \
+        --topic source-httpcastorm-avro \
+        --group source-httpcastorm-avro-logger \
+        --from-beginning \
+        --property schema.registry.url=http://schema-registry:8081 \
+        --property print.key=true \
+        --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer \
+        --property print.timestamp=true
+
+  #############################################################
+  # Source HTTP Server                                        #
+  #############################################################
+  source-httpcastorm-avro-httpserver:
+    image: integration-app-httpserver:latest
+    build:
+      context: ../../apps/httpserver/
+    restart: always
+    ports:
+      - 23000:3000
+
+volumes:
+  source-httpcastorm-avro-connector:
+
+networks:
+  default:
+    name: ${DOMAIN_NAME}
+    external: {}

@@ -4,7 +4,8 @@ Playground environment to evaluate integration appraches with Kafka.
 
 This repository contains the following integration playgrounds:
 
-* link:integrations/source-http-castorm[source-http-castorm]: Kafka Connect - Castorm HTTP Source Connector with Avro
+* link:integrations/source-httpcastorm-avro[source-httpcastorm-avro]: Kafka Connect - Castorm HTTP Source Connector with Avro
+* link:integrations/source-httpcastorm-json[source-httpcastorm-json]: Kafka Connect - Castorm HTTP Source Connector with JSON
 
 == Quick Start
 
@@ -14,10 +15,23 @@ This repository contains the following integration playgrounds:
 ./dc-env.sh platform up -d
 ----
 
-Run and play around with any of the integrations, e.g. link:integrations/source-http-castorm[source-http-castorm].
+Run and play around with any of the integrations, e.g. link:integrations/source-httpcastorm-avro[source-httpcastorm-avro].
 
 .Finally, shut down the platform
 [source,bash]
 ----
 ./dc-env.sh platform down -v
 ----
+
+== Docker Images
+
+The Docker images used for Kafka and Kafka Connect are custom builds of the link:https://github.com/apache/kafka/[Open Source version of Apache Kafka]. The corresponding Dockerfiles are located in the link:https://github.com/ueisele/kafka-images[kafka-images] GitHub repository.
+
+Detailed information about configuration of these images can be found at:
+
+* link:https://github.com/ueisele/kafka-images/tree/main/server-standalone[Kafka Server Standalone Configuration]
+* link:https://github.com/ueisele/kafka-images/tree/main/connect-standalone[Kafka Connect Standalone Configuration]
+
+The configuration is fully compatible with the link:https://docs.confluent.io/platform/current/installation/docker/config-reference.html#kconnect-long-configuration[Confluent Docker images].
+
+The reason why we used the custom images is, that configuration during development is simplified.
