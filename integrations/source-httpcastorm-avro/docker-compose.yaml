@@ -14,8 +14,12 @@ services:
     image: ueisele/apache-kafka-connect-standalone:${KAFKA_VERSION}
     restart: always
     volumes:
-      - source-httpcastorm-avro-connector:/var/lib/kafka-connect/
+      - source-httpcastorm-avro-connector:/opt/apache/kafka/data
     environment:
+      ## Plugin Installation
+      PLUGIN_INSTALL_URLS: |
+        https://github.com/castorm/kafka-connect-http/releases/download/v0.8.11/castorm-kafka-connect-http-0.8.11.zip
+        https://github.com/ueisele/expandjsonsmt/releases/download/0.0.7-structs/kafka-connect-smt-expandjsonsmt-0.0.7-structs-assemble-all.jar
       ## Worker Configuration
       CONNECT_BOOTSTRAP_SERVERS: kafka:9092
       CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
@@ -26,9 +30,6 @@ services:
       CONNECT_OFFSET_FLUSH_INTERVAL_MS: 5000
       CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
       CONNECT_LOG4J_LOGGERS: "org.reflections=ERROR,org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,com.github.castorm.kafka.connect.http.client.okhttp.OkHttpClient=DEBUG"
-      CONNECT_PLUGIN_INSTALL_EXTENSION_URLS: |
-        https://github.com/castorm/kafka-connect-http/releases/download/v0.8.11/castorm-kafka-connect-http-0.8.11.zip
-        https://github.com/ueisele/expandjsonsmt/releases/download/0.0.7-structs/kafka-connect-smt-expandjsonsmt-0.0.7-structs-assemble-all.jar
       ## Connector Configuration
       CONNECTOR_NAME: http-source
       CONNECTOR_CONNECTOR_CLASS: com.github.castorm.kafka.connect.http.HttpSourceConnector
